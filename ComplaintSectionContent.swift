@@ -1,3 +1,11 @@
+//
+//  ComplaintSectionContent.swift
+//  Signup
+//
+//  Created by Dev Ruhela on 28/04/25.
+//
+
+
 import SwiftUI
 
 // This is the content portion of the complaint section without NavigationView
@@ -11,82 +19,92 @@ struct ComplaintSectionContent: View {
     @State private var selectedComplaint: Complaint? = nil
     
     var body: some View {
-        ZStack {
-            BGcolor.ignoresSafeArea(.all)
-            VStack {
-                VStack(alignment: .leading) {
-                    Text("Manage and track all service complaints")
-                        .font(.footnote)
-                        .padding(.horizontal)
-                        .padding(.top, -1)
-                    HStack {
-                        Image(systemName: "line.horizontal.3.decrease.circle")
-                        
-                            .resizable()
-                            .frame(width: 25, height: 25)
-                            .padding(.horizontal)
-                            .foregroundColor(.red)
-                        Text("Apply Filters")
-                            .padding(.leading,-15)
+        NavigationView {
+            ZStack {
+                BGcolor.ignoresSafeArea(.all)
+                VStack {
+                    VStack(alignment: .leading) {
+                        Text("Manage and track all service complaints")
                             .font(.footnote)
-                            .foregroundColor(Color.pink)
-                        Spacer()
+                            .padding(.horizontal)
+                            .padding(.top, -1)
                         HStack {
+                            Image(systemName: "line.horizontal.3.decrease.circle")
                             
-                            Picker("select complaint", selection: $selectComplaint) {
-                                Text("All").tag("All")
-                                Text("Unassigned").tag("Submitted")
-                                Text("Declined").tag("Rejected")
-                                Text("In Progress").tag("In Progress")
-                                Text("Under Review").tag("Under Review")
-                            }
-                            .accentColor(Color.pink)
-                            .pickerStyle(.menu)
-                        }
-                        .padding(.vertical,-4)
-                        
-                        
-                        .background(Color.pink.opacity(0.2).cornerRadius(10))
-                        .padding(.trailing)
-                        .padding(.bottom,10)
-                        .padding(.top,10)
-                        
-                    }
-                    
-                    
-                    
-                    ScrollView {
-                        if !authStore.Complaints.isEmpty {
-                            VStack(spacing: 15) {
-                                ForEach(authStore.Complaints.filter { selectComplaint == "All" || $0.status == selectComplaint }) { complaint in
-                                    complaintCard(complaint: complaint)
+                                .resizable()
+                                .frame(width: 25, height: 25)
+                                .padding(.horizontal)
+                                .foregroundColor(.red)
+                            Text("Apply Filters")
+                                .padding(.leading,-15)
+                                .font(.footnote)
+                                .foregroundColor(Color.pink)
+                            Spacer()
+                            HStack {
+                                
+                                Picker("select complaint", selection: $selectComplaint) {
+                                    Text("All").tag("All")
+                                    Text("Unassigned").tag("Submitted")
+                                    Text("Declined").tag("Rejected")
+                                    Text("In Progress").tag("In Progress")
+                                    Text("Under Review").tag("Under Review")
                                 }
+                                .accentColor(Color.pink)
+                                .pickerStyle(.menu)
                             }
-                            .id(selectComplaint) //  important: forces VStack to recognize change
-                            .animation(.easeInOut, value: selectComplaint)
+                            .padding(.vertical,-4)
+                            
+                            
+                            .background(Color.pink.opacity(0.2).cornerRadius(10))
+                            .padding(.trailing)
+                            .padding(.bottom,10)
+                            .padding(.top,10)
+                            
                         }
-                        else {
-                            Text("No complaints available")
-                                .frame(maxWidth: .infinity)
-                                .padding()
+                        
+                        
+                        ScrollView {
+                            if !authStore.Complaints.isEmpty {
+                                VStack(spacing: 15) {
+                                    ForEach(authStore.Complaints.filter { selectComplaint == "All" || $0.status == selectComplaint }) { complaint in
+                                        complaintCard(complaint: complaint)
+                                    }
+                                }
+                                .id(selectComplaint) //  important: forces VStack to recognize change
+                                .animation(.easeInOut, value: selectComplaint)
+                            }
+                            else {
+                                Text("No complaints available")
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                            }
                         }
+                        .task {
+                            await refreshData()
+                        }
+                        .refreshable {
+                            await refreshData()
+                        }
+                        Spacer()
                     }
-                    .task {
-                        await refreshData()
-                    }
-                    .refreshable {
-                        await refreshData()
-                    }
-                    Spacer()
                 }
+                .navigationBarTitle("Complaints", displayMode: .large)
+                .navigationBarItems(leading:
+                    Image("Logo")
+                        .resizable()
+                        .frame(width: 35, height: 35)
+                        .padding(.bottom, 5)
+                )
+                .sheet(item: $selectedComplaint) { complaint in
+                    
+                        ComplaintView(complaint: complaint)
+            }
+            
+                        
+                
             }
         }
-        .sheet(item: $selectedComplaint) { complaint in
-            NavigationView { // Add NavigationView inside sheet
-                ComplaintView(complaint: complaint)
-                    .navigationBarTitle("Complaint #\(complaint.complaint_id)", displayMode: .inline)
-            }
-        }
+        
     }
     
     func complaintCard(complaint: Complaint) -> some View {
@@ -146,109 +164,104 @@ struct ComplaintView: View {
     let complaint: Complaint
     
     var body: some View {
-        ZStack {
-            Color.gray.opacity(0.04).ignoresSafeArea(.all)
-            VStack {
-                VStack(alignment: .leading) {
-                    HStack {
-                        Text("Description")
-                            .foregroundColor(Color.black)
-                            .fontWeight(.semibold)
-                            .padding(.leading)
-                            .padding(.top, 20)
-                        
-                        Spacer()
-                        
-                        statusBadge(status: "\(complaint.status)")
-                            .padding(.top, 10)
-                            .padding(.trailing, 10)
-                    }
-                    Text("\(complaint.description)")
-                        .padding(.horizontal)
-                        .foregroundColor(Color.black.opacity(0.5))
-                    
-                    HStack {
-                        Text("Date of issuance")
-                            .foregroundColor(Color.black)
-                            .fontWeight(.semibold)
-                            .padding(.leading)
-                            .padding(.top, 20)
-                        Spacer()
-                    }
-                    Text("\(complaint.created_at.prefix(11))")
-                        .padding(.horizontal)
-                        .foregroundColor(Color.black.opacity(0.5))
-                    
-                    HStack {
-                        Text("Complainee")
-                            .foregroundColor(Color.black)
-                            .fontWeight(.semibold)
-                            .padding(.leading)
-                            .padding(.top, 20)
-                        Spacer()
-                    }
-                    Text("Email: \(complaint.email)")
-                        .padding(.horizontal)
-                        .foregroundColor(Color.black.opacity(0.5))
-                    Text("Contact: \(complaint.phone_no)")
-                        .padding(.horizontal)
-                        .foregroundColor(Color.black.opacity(0.5))
-                    VStack {
+        NavigationView {
+            ZStack {
+                Color.gray.opacity(0.04).ignoresSafeArea(.all)
+                VStack {
+                    VStack(alignment: .leading) {
                         HStack {
-                            Text("Location")
+                            Text("Description")
+                                .foregroundColor(Color.black)
+                                .fontWeight(.semibold)
+                                .padding(.leading)
+                                .padding(.top, 20)
+                            
+                            Spacer()
+                            
+                            statusBadge(status: "\(complaint.status)")
+                                .padding(.top, 10)
+                                .padding(.trailing, 10)
+                        }
+                        Text("\(complaint.description)")
+                            .padding(.horizontal)
+                            .foregroundColor(Color.black.opacity(0.5))
+                        
+                        HStack {
+                            Text("Date of issuance")
                                 .foregroundColor(Color.black)
                                 .fontWeight(.semibold)
                                 .padding(.leading)
                                 .padding(.top, 20)
                             Spacer()
-                            Text("Priority")
+                        }
+                        Text("\(complaint.created_at.prefix(11))")
+                            .padding(.horizontal)
+                            .foregroundColor(Color.black.opacity(0.5))
+                        
+                        HStack {
+                            Text("Complainee")
                                 .foregroundColor(Color.black)
                                 .fontWeight(.semibold)
-                                .padding(.trailing)
+                                .padding(.leading)
                                 .padding(.top, 20)
-                        }
-                        HStack {
-                            Text("\(complaint.hostel_no), \(complaint.room_no)")
-                                .foregroundColor(Color.black.opacity(0.5))
-                                .padding(.top, -15)
-                                .padding(.leading, 15)
                             Spacer()
-                            priorityBadge(priority: "\(complaint.priority)")
-                                .padding(.trailing)
-                                .padding(.top, -8)
+                        }
+                        Text("Email: \(complaint.email)")
+                            .padding(.horizontal)
+                            .foregroundColor(Color.black.opacity(0.5))
+                        Text("Contact: \(complaint.phone_no)")
+                            .padding(.horizontal)
+                            .foregroundColor(Color.black.opacity(0.5))
+                        VStack {
+                            HStack {
+                                Text("Location")
+                                    .foregroundColor(Color.black)
+                                    .fontWeight(.semibold)
+                                    .padding(.leading)
+                                    .padding(.top, 20)
+                                Spacer()
+                                Text("Priority")
+                                    .foregroundColor(Color.black)
+                                    .fontWeight(.semibold)
+                                    .padding(.trailing)
+                                    .padding(.top, 20)
+                            }
+                            HStack {
+                                Text("\(complaint.hostel_no), \(complaint.room_no)")
+                                    .foregroundColor(Color.black.opacity(0.5))
+                                    .padding(.top, -15)
+                                    .padding(.leading, 15)
+                                Spacer()
+                                priorityBadge(priority: "\(complaint.priority)")
+                                    .padding(.trailing)
+                                    .padding(.top, -8)
+                            }
+                        }
+                        
+                        Spacer()
+                        
+                        HStack {
+                            Spacer()
+                            Text("Assign Engineer +")
+                                .padding(.horizontal)
+                                .padding(.vertical, 8)
+                                .background(Color.blue.cornerRadius(10))
+                                .foregroundColor(Color.white)
+                                .padding()
                         }
                     }
-                    
                     Spacer()
-                    
-                    HStack {
-                        Spacer()
-                        Text("Assign Engineer +")
-                            .padding(.horizontal)
-                            .padding(.vertical, 8)
-                            .background(Color.blue.cornerRadius(10))
-                            .foregroundColor(Color.white)
-                            .padding()
-                    }
                 }
-                Spacer()
+                .navigationBarTitle("Complaint #\(complaint.complaint_id)", displayMode: .inline)
             }
+            
         }
+        
     }
 }
 
-// Wrapper view for previews  
-struct ComplaintSection: View {
-    var body: some View {
-        NavigationView {
-            ComplaintSectionContent()
-                .environmentObject(AuthStore())
-                .navigationBarTitle("Complaints", displayMode: .large)
-        }
-    }
-}
 
 #Preview {
-    ComplaintSection()
+    ComplaintSectionContent()
         .environmentObject(AuthStore())
 }
