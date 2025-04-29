@@ -1,3 +1,11 @@
+//
+//  EngineerSectionContent.swift
+//  Signup
+//
+//  Created by Dev Ruhela on 28/04/25.
+//
+
+
 import SwiftUI
 
 // This is the content portion of the engineer section without NavigationView
@@ -11,108 +19,119 @@ struct EngineerSectionContent: View {
   
     
     var body: some View {
-        ZStack {
-            BGcolor.ignoresSafeArea(.all)
-            VStack {
-                VStack(alignment: .leading) {
-                    Text("Manage your team of technical specialists")
-                        .padding(.horizontal)
-                    
-                    TextField("Search Engineer", text: $searchEngineer)
-                        .padding()
-                        .background(Color.white)
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 15)
-                                .stroke(Color.black.opacity(0.5), lineWidth: 1)
-                        )
-                        .foregroundColor(.black)
-                        .font(.system(size: 16, weight: .medium))
-                        .padding()
-                
-                    
-                    HStack {
-                        Image(systemName: "line.horizontal.3.decrease.circle")
-                        
-                            .resizable()
-                            .frame(width: 25, height: 25)
+        NavigationView {
+            ZStack {
+                BGcolor.ignoresSafeArea(.all)
+                VStack {
+                    VStack(alignment: .leading) {
+                        Text("Manage your team of technical specialists")
                             .padding(.horizontal)
-                            .foregroundColor(.red)
-                        Text("Apply Filters")
-                            .padding(.leading,-15)
-                            .font(.footnote)
-                            .foregroundColor(Color.pink)
-                        Spacer()
-                        HStack{
-                            Picker("Status", selection: $engineerStatus) {
-                                Text("Busy").tag("Busy")
-                                Text("Available").tag("Available")
-                                Text("All").tag("All")
-                            }
-                            .accentColor(Color.pink)
-                            .pickerStyle(.menu)
-                            
-                            
-                        }
-                        .padding(.vertical,-4)
-                        .background(Color.pink.opacity(0.2).cornerRadius(20))
-                        .padding(.trailing,-5)
-                        .padding(.bottom,10)
-                        .padding(.top,10)
-                        HStack{
-                            
-                            Picker("Specialization", selection: $engineerSpec) {
-                                Text("Internet").tag("Internet")
-                                Text("Furniture").tag("Furniture")
-                                Text("Plumbing").tag("Plumbing")
-                                Text("Other").tag("Other")
-                                Text("All").tag("All")
-                            }
-                            .accentColor(Color.pink)
-                            .pickerStyle(.menu)
-                        }
                         
-                        .padding(.vertical,-4)
-                        .background(Color.pink.opacity(0.2).cornerRadius(20))
-                        .padding(.trailing)
-                        .padding(.bottom,10)
-                        .padding(.top,10)
+                        TextField("Search Engineer", text: $searchEngineer)
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 15)
+                                    .stroke(Color.black.opacity(0.5), lineWidth: 1)
+                            )
+                            .foregroundColor(.black)
+                            .font(.system(size: 16, weight: .medium))
+                            .padding()
                         
-                    }
-                    
-                    
-                    ScrollView {
-                        if !authStore.Engineers.isEmpty {
-                            VStack(spacing: 15) {
-                                ForEach(authStore.Engineers.filter { engineer in
-                                    (engineerStatus == "All" || engineer.status == engineerStatus) &&
-                                    (engineerSpec == "All" || engineer.specialization == engineerSpec)
-                                }) { engineer in
-                                    EngineerCard(engineer: engineer)
-                                    
+                        
+                        HStack {
+                            Image(systemName: "line.horizontal.3.decrease.circle")
+                            
+                                .resizable()
+                                .frame(width: 25, height: 25)
+                                .padding(.horizontal)
+                                .foregroundColor(.red)
+                            Text("Apply Filters")
+                                .padding(.leading,-15)
+                                .font(.footnote)
+                                .foregroundColor(Color.pink)
+                            Spacer()
+                            HStack{
+                                Picker("Status", selection: $engineerStatus) {
+                                    Text("Busy").tag("Busy")
+                                    Text("Available").tag("Available")
+                                    Text("All").tag("All")
                                 }
+                                .accentColor(Color.pink)
+                                .pickerStyle(.menu)
+                                
+                                
                             }
-                            .id(engineerStatus + engineerSpec) // this forces animation when filters change and we can multiple of these
-                            .animation(.easeInOut, value: engineerStatus + engineerSpec) // can add multiple elements while animating
-                        } else {
-                            Text("No engineers available")
-                                .frame(maxWidth: .infinity)
-                                .padding()
+                            .padding(.vertical,-4)
+                            .background(Color.pink.opacity(0.2).cornerRadius(20))
+                            .padding(.trailing,-5)
+                            .padding(.bottom,10)
+                            .padding(.top,10)
+                            HStack{
+                                
+                                Picker("Specialization", selection: $engineerSpec) {
+                                    Text("Internet").tag("Internet")
+                                    Text("Furniture").tag("Furniture")
+                                    Text("Plumbing").tag("Plumbing")
+                                    Text("Other").tag("Other")
+                                    Text("All").tag("All")
+                                }
+                                .accentColor(Color.pink)
+                                .pickerStyle(.menu)
+                            }
+                            
+                            .padding(.vertical,-4)
+                            .background(Color.pink.opacity(0.2).cornerRadius(20))
+                            .padding(.trailing)
+                            .padding(.bottom,10)
+                            .padding(.top,10)
+                            
                         }
+                        
+                        
+                        ScrollView {
+                            if !authStore.Engineers.isEmpty {
+                                VStack(spacing: 15) {
+                                    ForEach(authStore.Engineers.filter { engineer in
+                                        (engineerStatus == "All" || engineer.status == engineerStatus) &&
+                                        (engineerSpec == "All" || engineer.specialization == engineerSpec)
+                                    }) { engineer in
+                                        EngineerCard(engineer: engineer)
+                                        
+                                    }
+                                }
+                                .id(engineerStatus + engineerSpec) // this forces animation when filters change and we can multiple of these
+                                .animation(.easeInOut, value: engineerStatus + engineerSpec) // can add multiple elements while animating
+                            } else {
+                                Text("No engineers available")
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                            }
+                        }
+                        
+                        
+                        .task {
+                            await refreshData()
+                        }
+                        .refreshable {
+                            await refreshData()
+                        }
+                        
+                        Spacer()
                     }
-                    
-                
-                    .task {
-                        await refreshData()
-                    }
-                    .refreshable {
-                        await refreshData()
-                    }
-                    
-                    Spacer()
                 }
+                .navigationBarTitle("Engineers", displayMode: .large)
+                .navigationBarItems(leading:
+                    Image("Logo")
+                        .resizable()
+                        .frame(width: 35, height: 35)
+                        .padding(.bottom, 5)
+                )
             }
+            
         }
+        
     }
     
     struct EngineerCard: View {
@@ -355,18 +374,8 @@ struct EngineerSectionContent: View {
     }
 }
 
-// Wrapper view for previews
-struct EngineerSection: View {
-    var body: some View {
-        NavigationView {
-            EngineerSectionContent()
-                .environmentObject(AuthStore())
-                .navigationBarTitle("Engineers", displayMode: .large)
-        }
-    }
-}
 
 #Preview {
-    EngineerSection()
+    EngineerSectionContent()
         .environmentObject(AuthStore())
 }
